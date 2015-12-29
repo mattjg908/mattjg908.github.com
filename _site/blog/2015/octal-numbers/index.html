@@ -1,0 +1,238 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Octal Numbers and Credit Card Processing</title>
+
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="generator" content="Jekyll v3.0.1">
+
+    <link rel="canonical" href="/blog/2015/octal-numbers/" />
+    <link rel="alternate" type="application/atom+xml" title="A Jekyll Terrifying Blog — Feed" href="/blog/feed.atom" />
+
+    <link href='http://fonts.googleapis.com/css?family=Fenix|Montserrat|Playfair+Display:700italic,400italic' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <!--[if lt IE 9]>
+    <script src="/js/html5shiv.js"></script>
+    <script src="/js/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+    <div class="page-wrap">
+
+<section class="main-header regular">
+
+    <div class="vertical-container">
+
+    	<div class="wrapper clearfix wrapper-home">
+
+	        <header>
+	        	<a href="/">
+		            <h1 id="main-title">Matt Galvin</h1>
+		            <h2 id="main-subtitle">I'm a tuner, whether motorcycle or computer</h2>
+	        	</a>
+	        </header>
+
+	        <nav id="main-nav" role="navigation">
+				<a href="/about/" class="">About</a>
+				<a href="/blog/" class="">Blog</a>
+				<a href="mailto:matthewgalvin908@gmail.com">Contact</a>
+			</nav>
+
+		</div>
+
+    </div>
+
+</section>
+
+
+<article class="main-content">
+
+    <div class="wrapper">
+
+        <header class="section-header">
+            <h1 class="section-title">Octal Numbers and Credit Card Processing</h1>
+            <span class="section-subtitle"><time datetime="2015-01-01 00:00:00 -0500" pubdate>01 Jan 2015</time></span>
+        </header>
+      
+        <section class="post-content">
+
+        	<p>Hello again all.  I like to monitor the orders and exceptions of the Spree sites I work on to ensure everything is working as intended.  One morning I noticed an unusual error: "invalid value for Integer(): \"09\"" in Spree::Checkout/update on a Spree 2.1.x site.
+</p>
+
+<h5>The Issue</h5>
+
+<p>
+Given that this is a Spree-powered e-commerce site, a customer's inability to checkout is quite alarming. In the backtrace I could see that a <b>string</b> of "09" was causing an invalid value for an <b>integer</b>.  Why hadn't I seen this on every order in that case?
+</p>
+
+<p>
+I went into the browser and completed some test orders.  The bug seemed to affect only credit cards with a leading "0" in the expiration month, and then only certain expiration months.  I returned to the backtrace and saw this error was occurring with Active Merchant.  So, Spree was passing Active Merchant a string while Active Merchant was expecting an integer.
+</p>
+
+<p>
+Armed with a clearer understanding of the problem, I did some Googling.  I came across <a href="https://github.com/Shopify/active_merchant/issues/919">this post</a>.  This post describes the source of this issue as being the behavior of sprintf which I will describe below.  This <a href="https://www.ruby-forum.com/topic/77946">topic</a> was discussed in the <a href="https://www.ruby-forum.com">Ruby Forum</a>.
+</p>
+
+<h5> Octal Numbers </h5>
+
+<p>
+As per Daniel Martin on the aforementioned post:
+  <ul>
+    <li>   sprintf("%d",'08')      ==&gt;   ArgumentError</li>
+    <li>   sprintf("%d",'8')       ==&gt;   "8"</li>
+    <li>   sprintf("%d",'08'.to_i) ==&gt;   "8"</li>
+    <li>   sprintf("%f",'08')      ==&gt;   "8.000000"</li>
+  </ul>
+</p>
+
+<p>
+As you can see, sprintf cannot convert '08' or '09' to a decimal. Matthias Reitlinger notes, <blockquote>"%d tells sprintf to expect an Integer as the corresponding argument.  Being given a String instead it tries to convert it by calling Kernel#Integer"</blockquote>
+</p>
+
+<p>
+In the same post, we can review some documentation of Kernel#Integer
+</p>
+
+<div class="separator" style="clear: both; text-align: center;"><a href="http://4.bp.blogspot.com/-6Tdjwc_k_xQ/VLBOWap0sDI/AAAAAAAAALE/ajQl6ugROqs/s1600/blog.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="http://4.bp.blogspot.com/-6Tdjwc_k_xQ/VLBOWap0sDI/AAAAAAAAALE/ajQl6ugROqs/s1600/blog.png" /></a></div>
+
+<p>
+We can see here that if the argument being provided is a string (and it is since that is what Spree is sending), the "0" will be honored.  Again, we know 
+  <table>
+    <tr>
+      <td>sprintf("%d",'01') =&gt; "1"</td>
+      <td> | </td>
+      <td>sprintf("%d", 01) =&gt; "1"</td>
+    </tr>
+
+    <tr>
+      <td>sprintf("%d",'02') =&gt; "2"</td>
+      <td> | </td>
+      <td>sprintf("%d", 02) =&gt; "2"</td>
+    </tr>
+
+    <tr>
+      <td>sprintf("%d",'03') =&gt; "3"</td>
+      <td> | </td>
+      <td>sprintf("%d", 03) =&gt; "3"</td>
+    </tr>
+
+    <tr>
+      <td>sprintf("%d",'04') =&gt; "4"</td>
+      <td> | </td>
+      <td>sprintf("%d", 04) =&gt; "4"</td>
+    </tr>
+
+    <tr>
+      <td>sprintf("%d",'05') =&gt; "5"</td>
+      <td> | </td>
+      <td>sprintf("%d", 05) =&gt; "5"</td>
+    </tr>
+
+    <tr>
+      <td>sprintf("%d",'06') =&gt; "6"</td>
+      <td> | </td>
+      <td>sprintf("%d", 06) =&gt; "6"</td>
+    </tr>
+
+    <tr>
+      <td>sprintf("%d",'07') =&gt; "7"</td>
+      <td> | </td>
+      <td>sprintf("%d", 07) =&gt; "7"</td>
+    </tr>
+
+    <tr>
+      <td>sprintf("%d",'08') =&gt; error</td>
+      <td> | </td>
+      <td>sprintf("%d", 08) =&gt; error</td>
+    </tr>
+
+    <tr>
+      <td>sprintf("%d",'09') =&gt; error</td>
+      <td> | </td>
+      <td>sprintf("%d", 09) =&gt; error</td>
+    </tr>
+
+  </table>
+</p>
+
+<p> By pre-prepending the "0" to the numbers, they are being marked as 'octal'.  <a href="http://en.wikipedia.org/wiki/Octal">Wikipedia</a> defines octal numbers as
+<br />
+<blockquote>"The octal numeral system, or oct for short, is the base-8 number system, and uses the digits 0 to 7. Octal numerals can be made from binary numerals by grouping consecutive binary digits into groups of three (starting from the right)."
+</blockquote>
+</p>
+
+<p>
+So, 08 and 09 are not octal numbers.
+</p>
+
+<h5>Solution</h5>
+
+<p>
+This is why this checkout error did not occur on every order whose payment expiration month had a leading "0", only August (08) and September (09) were susceptible as the leading '0' indicates we are passing in an octal of which 08 and 09 are not valid examples of.  So, I made Spree send integers (sprintf("%d",8) #=&gt; "8" and sprintf("%d",9) #=&gt; "9") so that the leading "0" would not get sent (thereby not trying to pass them as octals).  I created a app/models/spree/credit_card_decorator.rb file with the contents
+<pre class="brush:ruby">
+Spree::CreditCard.class_eval do
+  def expiry=(expiry)
+    if expiry.present?
+      self[:month], self[:year] = expiry.delete(' ').split('/')
+      self[:year] = "20" + self[:year] if self[:year].length == 2
+      self[:year] = self[:year].to_i
+      self[:month] = self[:month].to_i
+    end
+  end
+end
+</pre>
+</p>
+
+<p>
+After adding this, I tested it in the browser and there were no more checkout errors!  I hope you've found this interesting and helpful, thanks for reading!
+</p>
+
+
+            <div class="post-nav">
+
+                <span class="section-subtitle">Share on <a href="https://twitter.com/home?status=Octal Numbers and Credit Card Processing+http://rubenbristian.com/jackman/blog/2015/octal-numbers/" target="_blank">Twitter</a>, <a href="https://www.facebook.com/share.php?u=http://rubenbristian.com/jackman/blog/2015/octal-numbers/&amp;title=Octal Numbers and Credit Card Processing" target="_blank">Facebook</a>, <a href="https://plus.google.com/share?url=http://rubenbristian.com/jackman/blog/2015/octal-numbers/" target="_blank">Google+</a></span><br>
+
+				 
+                	<a href="/blog/2014/auth-error/" class="button">Prev</a>
+				 
+				 
+
+            </div>
+
+        </section>
+
+    </div>
+
+</article>
+
+    </div>
+    
+<footer class="main-footer">
+
+    <div class="vertical-container">
+
+        <div class="wrapper">
+
+            <ul class="social">
+                <li><a href="https://twitter.com/mattjg908">Twitter</a></li>
+                <li><a href="https://github.com/mattjg908">GitHub</a></li>
+                <li><a href="https://linkedin.com/in/mattgalvin9">LinkedIn</a></li>
+            </ul>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+</body>
+</html>

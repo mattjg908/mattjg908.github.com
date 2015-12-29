@@ -1,0 +1,4 @@
+permalink: '/blog/:year/:title/'
+base: http://rubenbristian.com/jackman
+name: A Jekyll Terrifying Blog
+author: Tom Jackman

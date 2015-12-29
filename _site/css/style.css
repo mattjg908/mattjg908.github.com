@@ -478,6 +478,18 @@ figcaption {
 -----   Projects   -----
 -------------------------*/
 
+.about-image {
+        width: 62%;
+}
+
+#about-image {
+        width: 34.65%;
+}
+
+.engine-image {
+        width: 68.7%;
+}
+
 .projects-list {
 	margin-top: 30px;
 	margin-left: -20px;

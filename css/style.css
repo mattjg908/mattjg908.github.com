@@ -30,10 +30,12 @@ html,body,div,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,abbr,address
 	color: #FBE3C4;
 	border: 2px solid #FBE3C4;
 }
-
 #main-nav a:hover, #main-nav a.selected {
 	background: #FBE3C4;
 	color: #291A03;
+}
+#main-title:hover, #main-subtitle:hover {
+	color: #D4A16B;
 }
 
 /* Regular buttons & img captions */
@@ -317,7 +319,7 @@ h4 + p {
 }
 .wrapper-home {
         position: absolute;
-        bottom: 64%;
+        bottom: 60%;
         left: 4%;
 }
 .main-content .wrapper {
@@ -482,25 +484,19 @@ figcaption {
         width: 62%;
 }
 
-#about-image {
-        width: 34.65%;
-}
-
-.engine-image {
-        width: 68.7%;
-}
-
 .projects-list {
 	margin-top: 30px;
 	margin-left: -20px;
 	width: 110%;
 }
 .projects-list li {
+        width: 100%;
 	float: left;
 	margin: 20px;
 	list-style: none;
 }
 .projects-list a {
+        width: 100%;
 	position: relative;
 	display: inline-block;
 	color: #fff;

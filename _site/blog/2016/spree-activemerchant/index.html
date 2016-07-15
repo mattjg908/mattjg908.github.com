@@ -1,0 +1,258 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Octal Numbers and Credit Card Processing</title>
+
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="generator" content="Jekyll v3.0.1">
+
+    <link rel="canonical" href="/blog/2015/octal-numbers/" />
+    <link rel="alternate" type="application/atom+xml" title="A Jekyll Terrifying Blog — Feed" href="/blog/feed.atom" />
+
+    <link href='http://fonts.googleapis.com/css?family=Fenix|Montserrat|Playfair+Display:700italic,400italic' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <!--[if lt IE 9]>
+    <script src="/js/html5shiv.js"></script>
+    <script src="/js/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+    <div class="page-wrap">
+
+<section class="main-header regular">
+
+    <div class="vertical-container">
+
+    	<div class="wrapper clearfix wrapper-home">
+
+	        <header>
+	        	<a href="/">
+		            <h1 id="main-title">Matt Galvin</h1>
+		            <h2 id="main-subtitle">I'm a tuner, whether motorcycle or computer</h2>
+	        	</a>
+	        </header>
+
+	        <nav id="main-nav" role="navigation">
+				<a href="/about/" class="">About</a>
+				<a href="/blog/" class="">Blog</a>
+				<a href="mailto:matthewgalvin908@gmail.com">Contact</a>
+			</nav>
+
+		</div>
+
+    </div>
+
+</section>
+
+
+<article class="main-content">
+<p>
+Authorize.net has disabled the RC4 cipher suite on their test server. Their production server update will follow soon. So, in order to ensure your, or your client's, site(s) do not experience any interruption in payment processing it is wise to place a test order in the Authorize.net test environment. <a href="http://app.payment.authorize.net/e/es.aspx?s=986383348&e=1086337"></a>
+</p> 
+
+<p>
+The projects I was testing were all <a href="https://spreecommerce.com/">Spree</a> Gem (2.1.x). The Spree Gem uses the <a href="https://github.com/activemerchant/active_merchant">ActiveMerchant </a>Gem (in Spree 2.1.x it's ActiveMerchant version 1.34.x). Spree allows you to sign into the admin and select which server your Authorize.net payment method will hit- production or test. There is another option for selecting a "Test <i>Mode</i>" transaction. The difference between a test <b>server</b> transaction and a test <b>mode</b> transaction is explained quite succinctly on the <a href="http://developer.authorize.net/hello_world/testing_guide/">Authorize.net documentation</a>. To summarize it, test <b>server</b> transactions are never sent to financial institutions for processing but are stored in Authorize.net (so you can see their details). Transactions in test <b>mode</b> however are not stored and return a transaction ID of zero.
+</p>
+
+</p>
+I wanted to use my Authorize.net test account to ensure my clients were ready for the RC4 Cypher Suite disablement. I ran across a few strange things. First, for three sites, no matter what I did, I kept getting errors saying my Authorize.net account was either inactive or I was providing the wrong credentials. I signed in to Authorize.net and verified my account was active. I triple checked the credentials, they were right. So, I re-read the Spree docs thinking that perhaps I needed to use a special word or format to actually use the test server ("test" versus "Test" or something like that). 
+</p>
+
+<p>
+Below is a screenshot of the test payment method I had created and was trying to use.
+</p>
+
+<p>
+<div class="separator" style="clear: both; text-align: center;"><a href="https://2.bp.blogspot.com/-x5fDTLHBbqk/V0nJuYlGknI/AAAAAAAAAM0/rLKKwfyMpWASfWPb1M84vyQ-GXpysYWWACLcB/s1600/Selection_007.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="https://2.bp.blogspot.com/-x5fDTLHBbqk/V0nJuYlGknI/AAAAAAAAAM0/rLKKwfyMpWASfWPb1M84vyQ-GXpysYWWACLcB/s1600/Selection_007.png" /></a></div>
+</p>
+
+<p>
+Since I kept getting errors I looked through the Spree code, then the <a href="https://github.com/activemerchant/active_merchant">ActiveMerchant Gem</a> that Spree is using.
+</p>
+
+<p>
+Below, you can see that the ActiveMerchant is deciding which URL to use (test or live) based on the value of <b>test?</b> (line 15).
+<a href="https://github.com/activemerchant/active_merchant/blob/master/lib/active_merchant/billing/gateways/authorize_net.rb">active_merchant/lib/active_merchant/billing/gateways/authorize_net.rb</a>
+<pre class="brush:ruby">
+require 'nokogiri'
+
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:
+    class AuthorizeNetGateway < Gateway
+      include Empty
+
+      self.test_url = 'https://apitest.authorize.net/xml/v1/request.api'
+      self.live_url = 'https://api2.authorize.net/xml/v1/request.api'
+
+.
+.
+.
+      def url
+        test? ? test_url : live_url
+      end
+</pre>
+</p>
+
+
+<p>
+How and where is this set? Spree passes the ActiveMerchant Gem some data which the ActiveMerchant Gem uses to create Response objects. Below is the code where ActiveMerchant handles this data.
+<br>
+<a href="https://github.com/activemerchant/active_merchant/blob/master/lib/active_merchant/billing/response.rb">active_merchant/lib/active_merchant/billing/response.rb</a>
+</p>
+<p>
+<pre class="brush:ruby">
+
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:
+    class Error < ActiveMerchantError #:nodoc:
+    end
+
+    class Response
+      attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result, :error_code, :emv_authorization
+.
+.
+.
+      def test?
+        @test
+      end
+.
+.
+.
+      def initialize(success, message, params = {}, options = {})
+        @success, @message, @params = success, message, params.stringify_keys
+        @test = options[:test] || false
+        @authorization = options[:authorization]
+        @fraud_review = options[:fraud_review]
+        @error_code = options[:error_code]
+        @emv_authorization = options[:emv_authorization]
+
+        @avs_result = if options[:avs_result].kind_of?(AVSResult)
+          options[:avs_result].to_hash
+        else
+          AVSResult.new(options[:avs_result]).to_hash
+        end
+
+        @cvv_result = if options[:cvv_result].kind_of?(CVVResult)
+          options[:cvv_result].to_hash
+        else
+          CVVResult.new(options[:cvv_result]).to_hash
+        end
+      end
+    end
+</pre>
+
+<a href="https://github.com/activemerchant/active_merchant/blob/master/lib/active_merchant/billing/gateway.rb">active_merchant/lib/active_merchant/billing/gateway.rb
+</a><pre class="brush:ruby">
+      # Are we running in test mode?
+      def test?
+        (@options.has_key?(:test) ? @options[:test] : Base.test?)
+      end
+</pre>
+</p>
+
+<p>
+Now that I was more familiar with ActiveMerchant, I wanted to verify that Spree was passing the data as intended
+</p>
+
+<div class="separator" style="clear: both; text-align: center;"><a href="https://2.bp.blogspot.com/-jRse_6EStBU/V0uIAi42eCI/AAAAAAAAAOA/ouCXaRURc1Ef9jb7oPJpLFgxt11wP-sfACLcB/s1600/Selection_008.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="https://2.bp.blogspot.com/-jRse_6EStBU/V0uIAi42eCI/AAAAAAAAAOA/ouCXaRURc1Ef9jb7oPJpLFgxt11wP-sfACLcB/s640/Selection_008.png" /></a></div><div class="separator" style="clear: both; text-align: center;"><a href="https://1.bp.blogspot.com/-D06TVg4dwgw/V0uIB6bJLqI/AAAAAAAAAOE/SrxvHw_QoZ0yjOQ3ZMZdFzIO-8CwoBy1wCLcB/s1600/Selection_009.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" src="https://1.bp.blogspot.com/-D06TVg4dwgw/V0uIB6bJLqI/AAAAAAAAAOE/SrxvHw_QoZ0yjOQ3ZMZdFzIO-8CwoBy1wCLcB/s640/Selection_009.png" /></a></div>
+
+<p>
+I could see in <a href="https://github.com/spree/spree/blob/8bfa0824d2a7f6cfa6efc9bd4e32d1d564f6270b/core/app/models/spree/gateway.rb">spree/core/app/models/spree/gateway.rb</a> that Spree was setting ActiveMerchant::Billing::Base.gateway_mode equal to the server param as a symbol. I verified it with some logging.
+<pre class="brush:ruby">
+    def provider
+      gateway_options = options
+      gateway_options.delete :login if gateway_options.has_key?(:login) and gateway_options[:login].nil?
+      if gateway_options[:server]
+        ActiveMerchant::Billing::Base.gateway_mode = gateway_options[:server].to_sym
+      end 
+      @provider ||= provider_class.new(gateway_options)
+    end 
+</pre>
+</p>
+
+<p>
+At this point I was satisfied that Spree was sending a server param. I also knew Spree was setting Active Merchant's Base.gateway_mode as intended. I then reviewed <a href="https://github.com/activemerchant/active_merchant/blob/master/lib/active_merchant/billing/gateway.rb">active_merchant/lib/active_merchant/billing/gateway.rb
+</a> once more
+
+<pre class="brush:ruby">
+      # Are we running in test mode?
+      def test?
+        (@options.has_key?(:test) ? @options[:test] : Base.test?)
+      end
+</pre>
+and
+<a href="https://github.com/activemerchant/active_merchant/blob/v1.34.0/lib/active_merchant/billing/base.rb">
+active_merchant/lib/active_merchant/billing/base.rb</a>
+<pre class="brush:ruby">
+      def self.test?
+        self.gateway_mode == :test
+      end
+</pre>
+</p>
+So, that's it! We know from the exceptions I raised that Spree is sending a test key and a test_mode key. They seem to be the same value but with different keys (I'm guessing that's a mistake), and they both just seem to indicate if the test <b>mode</b> checkbox was checked or not in the Spree admin. However, Base.test? is the <b>server</b> selection and comes from whatever anyone enters in the server input box in the Spree admin. So, we just need to update the ternary operator to check if @options[:test] (test <i>mode</i>) <b>or</b> Base.test? (test <i>server</i>) is true.
+</p>
+
+<p>
+Since this is Spree, I created a decorator to override the test? method.
+</p>
+
+<p>app/models/gateway_decorator.rb</p>
+<pre class="brush:ruby">
+ActiveMerchant::Billing::Gateway.class_eval do
+  def test?
+    @options.has_key?(:test) && @options[:test] || ActiveMerchant::Billing::Base.test?
+  end 
+end
+</pre>
+
+<p>
+Lastly, I placed some test orders and it all worked as intended.
+</p>
+
+<h2> Summary</h2>
+
+<p>
+Authorize.net is disabling the RC4 Cypher suite. If your site(s) uses that, your payment processing may be interrupted. Since the test environment has been updated by Authorize.net, you can see if your site(s) is compliant by posting test transactions to the test environment. If it works, then your site(s) should be compliant and ready when Authorize.net applies the changes to the production server.
+</p>
+
+<p>
+Spree 2.1.x  (and perhaps all other Spree versions) ALWAYS send the test key, so the ActiveMerchant Gem will always just use the boolean value of that key instead of ever checking to see what the server was set to. Further, this fix makes things a little bit more robust in my opinion by checking if test mode OR the test server was specified, rather than <b>only checking</b> which server (gateway_mode) was specified <b>if the test key was absent</b>.
+</p>
+
+<p>
+Alternatively, you could probably make Spree only pass the test key if the value was true.  Either way, if you are trying to send test orders to the test environment for a Spree site of at least some versions and have not implemented one of these changes, you will be unable to do so until you add a similar fix as I have described here. If you need any further assistance, please reach out to us at <a href="mailto:ask@endpoint.com?subject=Blog Post Question">ask@endpoint.com</a>.
+</p>
+
+</article>
+
+    </div>
+    
+<footer class="main-footer">
+
+    <div class="vertical-container">
+
+        <div class="wrapper">
+
+            <ul class="social">
+                <li><a href="https://twitter.com/mattjg908">Twitter</a></li>
+                <li><a href="https://github.com/mattjg908">GitHub</a></li>
+                <li><a href="https://linkedin.com/in/mattgalvin9">LinkedIn</a></li>
+            </ul>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+</body>
+</html>

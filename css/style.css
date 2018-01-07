@@ -241,7 +241,7 @@ h4 + p {
 .main-header {
 	background-size: cover;
 	background-repeat: no-repeat;
-	background-position: 50% 50%;
+	background-position: 100% 17%;
 	background-image: url(../img/bg.jpg); /* main bg image */
 	top: 0;
 	left: 0;

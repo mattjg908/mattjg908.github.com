@@ -301,7 +301,6 @@ h4 + p {
 	text-align: left;
 }
 .main-header.regular #main-nav {
-	float: right;
 	margin-top: 25px;
 }
 .main-header.regular header {
@@ -319,7 +318,7 @@ h4 + p {
 }
 .wrapper-home {
         position: absolute;
-        bottom: 60%;
+        bottom: 32%;
         left: 4%;
 }
 .main-content .wrapper {
@@ -551,6 +550,20 @@ a, #posts-list li, #posts-list time, .projects-list .caption {
 /* ---------------------
 -----   A bit of responsiveness   -----
 -------------------------*/
+@media all and (max-width: 450px) {
+
+	.wrapper {
+    bottom: 10%;
+	}
+  #main-nav a {
+    font-size: 19px;
+    line-height: 19px;
+    padding: 3px 11px 5px;
+    margin: 1px;
+  }
+  
+}
+
 
 @media all and (max-width: 840px) {
 
@@ -569,6 +582,9 @@ a, #posts-list li, #posts-list time, .projects-list .caption {
 	.wrapper {
 		padding: 0 25px;
 	}
+  .wrapper-home {
+    bottom: 10%;
+  }
 	.copy {
 		margin: 10px;
 	}

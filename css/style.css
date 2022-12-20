@@ -495,7 +495,7 @@ figcaption {
 	list-style: none;
 }
 .projects-list a {
-        width: 100%;
+  width: 40%;
 	position: relative;
 	display: inline-block;
 	color: #fff;

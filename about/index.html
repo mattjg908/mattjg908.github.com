@@ -1,6 +1,7 @@
 ---
 layout: default
 title: About Me
+description: "Software engineer focused on distributed systems, embedded Linux, Elixir, Erlang, Nerves, hardware reverse engineering, and IoT infrastructure."
 overview: true
 ---
 
@@ -91,12 +92,23 @@ use <a href="https://archlinux.org/">Arch</a>, btw...</p>
             </div>
 
             <div class="one-half last">
-                <h4>Hardware Hacking</h4>
-                <p>See my presentation on how to hack hardware with Simple Power Analysis, demonstrates breaking RSA encryption with an oscilloscope. Presentation is
-                available <a href="https://docs.google.com/presentation/d/13RBVlxzd8dM_yB_70Rmzda348xZdte2t/edit?usp=sharing&ouid=104704378500619256091&rtpof=true&sd=true">here.</a>
-                Here is an Amazon Echo I was hacking in order to run Nerves:
-                </p>
-                <img src="/img/echo.png" alt="" />
+                <h4>Hardware Hacking &amp; Embedded Linux Reverse Engineering</h4>
+                <p>I work at the boundary between software and physical hardware: embedded Linux,
+                bootloaders, serial debugging, microcontrollers, and instrument-driven troubleshooting.
+                My <a href="https://docs.google.com/presentation/d/13RBVlxzd8dM_yB_70Rmzda348xZdte2t/edit?usp=sharing&amp;ouid=104704378500619256091&amp;rtpof=true&amp;sd=true">Simple Power Analysis presentation</a>
+                demonstrates an RSA side-channel attack using an oscilloscope.</p>
+                <p>I also investigated repurposing a first-generation Amazon Echo as an
+                <a href="https://nerves-project.org/">Elixir/Nerves</a> embedded Linux target.
+                I connected to its exposed UART debug pads, analyzed X-loader boot logs and
+                partition-handling code, used an oscilloscope to investigate serial signals,
+                and researched a Buildroot-based path to booting the BEAM virtual machine.
+                The target was incremental hardware bring-up with Wi-Fi and SSH before
+                supporting additional peripherals.</p>
+                <p><a href="/projects/amazon-echo-nerves/">Read my Amazon Echo reverse-engineering case study</a>
+                or <a href="/docs/amazon-echo-nerves.pdf">download my technical investigation (PDF)</a>.</p>
+                <a href="/projects/amazon-echo-nerves/">
+                    <img src="/img/echo.png" alt="First-generation Amazon Echo with exposed debug wiring during embedded Linux and Nerves investigation" />
+                </a>
             </div>
 
             <div class="one-half last">
@@ -161,6 +173,18 @@ use <a href="https://archlinux.org/">Arch</a>, btw...</p>
             </div>
             <div class="one-half last">
               <ul class="projects-list clearfix">
+
+                  <li>
+                      <a href="/projects/amazon-echo-nerves/">
+                          <img src="/img/echo.png" alt="Gen 1 Amazon Echo with debug-pad wiring for bootloader and UART analysis" />
+                          <div class="caption">
+                              <div>
+                                  <h4>Amazon Echo Reverse Engineering</h4>
+                                  <span>Nerves, Buildroot, Linux, UART, U-Boot, hardware bring-up</span>
+                              </div>
+                          </div>
+                      </a>
+                  </li>
 
                   <li>
                       <a href="https://docs.google.com/presentation/d/13RBVlxzd8dM_yB_70Rmzda348xZdte2t">

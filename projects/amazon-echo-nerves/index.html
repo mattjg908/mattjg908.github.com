@@ -1,0 +1,65 @@
+---
+layout: default
+title: "Amazon Echo Reverse Engineering | Nerves & Buildroot"
+description: "First-generation Amazon Echo embedded Linux reverse engineering: TI DM3725, UART and oscilloscope debugging, X-loader, U-Boot, Buildroot, Elixir, Erlang, and Nerves hardware bring-up research."
+---
+
+<article class="main-content">
+    <div class="wrapper clearfix">
+        <section class="page-content clearfix">
+            <header class="section-header">
+                <h3 class="section-title">Reverse Engineering a Gen 1 Amazon Echo for Nerves</h3>
+                <span class="section-subtitle">Embedded Linux, bootloaders, and hands-on hardware debugging</span>
+            </header>
+
+            <p>What would it take to give a first-generation Amazon Echo a second life as
+            a programmable embedded Linux device running
+            <a href="https://nerves-project.org/">Nerves</a>, Elixir, and the Erlang BEAM runtime?
+            I investigated the hardware and software boot path, with the goal of producing
+            a reproducible <a href="https://buildroot.org/">Buildroot</a>-based system
+            suitable for a community-supported Nerves target.</p>
+
+            <p><strong><a href="/docs/amazon-echo-nerves.pdf">Read the original technical investigation (8-page PDF)</a></strong>
+            &mdash; includes hardware photos, UART output, oscilloscope captures, source-code
+            analysis, relevant tooling, and references.</p>
+
+            <p><img src="/img/echo.png" alt="Disassembled first-generation Amazon Echo connected to debug wiring for UART and SD-card boot investigation" /></p>
+
+            <h4>Following the boot chain, not just the error message</h4>
+            <p>The first-generation Echo uses a Texas Instruments DM3725 processor and
+            exposes debug pads that can be used for UART access and SD-card boot research.
+            I wired up the device, collected serial output, and traced the vendor X-loader
+            code to investigate why the boot process was failing. One apparent
+            <code>custom_efi: invalid signature</code> error was misleading: the code
+            continued into a fallback DOS partition parser. I followed the corresponding
+            <code>get_partition_custom_efi</code> and
+            <code>get_partition_custom_dos</code> paths instead of treating the first
+            error string as a definitive root cause.</p>
+
+            <h4>Hardware-level debugging and Linux system bring-up</h4>
+            <p>When subsequent UART output became corrupted, I examined the signal with
+            an oscilloscope and tested possible serial baud-rate explanations. I also
+            compared SD-card partition and filesystem layouts, vendor boot components,
+            U-Boot variants, and the TI development SDK. The investigation exposed the
+            practical trade-offs of working with legacy vendor kernels, DSP-dependent
+            peripherals, and a more recent Buildroot toolchain.</p>
+
+            <h4>Engineering objective and scope</h4>
+            <p>The proposed minimum viable port was deliberately small: boot from an SD
+            card using a Buildroot configuration compatible with Nerves, bring up Wi-Fi
+            and SSH, and establish a foundation for running Elixir/Erlang applications.
+            Microphone-array and other peripheral support could follow incrementally.
+            This was an investigation and hardware bring-up effort, not a claim that
+            a complete Nerves port shipped.</p>
+
+            <p><strong>Technical areas:</strong> embedded Linux, hardware reverse engineering,
+            Texas Instruments DM3725, X-loader, U-Boot, boot-chain analysis,
+            SD/MMC boot, UART serial debugging, oscilloscope analysis, Linux partitioning,
+            Buildroot, Nerves systems, Erlang/Elixir, BEAM, Wi-Fi and SSH provisioning.</p>
+
+            <p>Related open-source work:
+            <a href="https://github.com/nerves-project/nerves_examples/commit/91f5e9f4df8f26481bef490c28152b489bfe00dd">my contribution to the Nerves examples project</a>.
+            <a href="/about/">Back to my portfolio</a>.</p>
+        </section>
+    </div>
+</article>
